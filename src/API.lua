@@ -2,8 +2,8 @@ local Types = require(script.Parent.Types)
 
 return function(Iris: Types.Iris)
     -- basic wrapper for nearly every widget, saves space.
-    local function wrapper(name: string): (arguments: Types.WidgetArguments?, states: Types.WidgetStates?) -> Types.Widget
-        return function(arguments: Types.WidgetArguments?, states: Types.WidgetStates?): Types.Widget
+    local function wrapper(name)
+        return function(arguments, states)
             return Iris.Internal._Insert(name, arguments, states)
         end
     end
@@ -15,7 +15,7 @@ return function(Iris: Types.Iris)
     ]]
     --[=[
         @class Window
-        
+
         Windows are the fundamental widget for Iris. Every other widget must be a descendant of a window.
 
         ```lua
@@ -24,7 +24,7 @@ return function(Iris: Types.Iris)
         Iris.End()
         ```
 
-        ![Example window](../assets/basicWindow.png)
+        ![Example window](/Iris/assets/api/window/basicWindow.png)
 
         If you do not want the code inside a window to run unless it is open then you can use the following:
         ```lua
@@ -38,16 +38,16 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop Window Iris.Window
         @within Window
+        @prop Window Iris.Window
         @tag Widget
         @tag HasChildren
         @tag HasState
-        
+
         The top-level container for all other widgets to be created within.
         Can be moved and resized across the screen. Cannot contain embedded windows.
         Menus can be appended to windows creating a menubar.
-        
+
         ```lua
         hasChildren = true
         hasState = true
@@ -61,7 +61,7 @@ return function(Iris: Types.Iris)
             NoScrollbar: boolean? = false, -- the scrollbar if the window is too short for all widgets.
             NoResize: boolean? = false,
             NoNav: boolean? = false, -- unimplemented.
-            NoMenu: boolean? -- whether the menubar will show if created.
+            NoMenu: boolean? = false -- whether the menubar will show if created.
         }
         Events = {
             opened: () -> boolean, -- once when opened.
@@ -71,28 +71,28 @@ return function(Iris: Types.Iris)
             hovered: () -> boolean -- fires when the mouse hovers over any of the window.
         }
         States = {
-            size = State<Vector2>? = Vector2.new(400, 300),
-            position = State<Vector2>?,
-            isUncollapsed = State<boolean>? = true,
-            isOpened = State<boolean>? = true,
-            scrollDistance = State<number>? -- vertical scroll distance, if too short.
+            size: State<Vector2>? = Vector2.new(400, 300),
+            position: State<Vector2>?,
+            isUncollapsed: State<boolean>? = true,
+            isOpened: State<boolean>? = true,
+            scrollDistance: State<number>? -- vertical scroll distance, if too short.
         }
         ```
     ]=]
     Iris.Window = wrapper("Window")
 
     --[=[
-        @function SetFocusedWindow
         @within Iris
-        @param window Types.Widget -- the window to focus.
+        @function SetFocusedWindow
+        @param window Types.Window -- the window to focus.
 
         Sets the focused window to the window provided, which brings it to the front and makes it active.
     ]=]
     Iris.SetFocusedWindow = Iris.Internal.SetFocusedWindow
 
     --[=[
-        @prop Tooltip Iris.Tooltip
         @within Window
+        @prop Tooltip Iris.Tooltip
         @tag Widget
 
         Displays a text label next to the cursor
@@ -101,8 +101,8 @@ return function(Iris: Types.Iris)
         Iris.Tooltip({"My custom tooltip"})
         ```
 
-        ![Basic tooltip example](../assets/basicTooltip.png)
-        
+        ![Basic tooltip example](/Iris/assets/api/window/basicTooltip.png)
+
         ```lua
         hasChildren = false
         hasState = false
@@ -124,16 +124,16 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop MenuBar Iris.MenuBar
         @within Menu
+        @prop MenuBar Iris.MenuBar
         @tag Widget
         @tag HasChildren
-        
+
         Creates a MenuBar for the current window. Must be called directly under a Window and not within a child widget.
         :::info
             This does not create any menus, just tells the window that we going to add menus within.
         :::
-        
+
         ```lua
         hasChildren = true
         hasState = false
@@ -142,23 +142,36 @@ return function(Iris: Types.Iris)
     Iris.MenuBar = wrapper("MenuBar")
 
     --[=[
-        @prop Menu Iris.Menu
         @within Menu
+        @prop Menu Iris.Menu
         @tag Widget
         @tag HasChildren
         @tag HasState
-        
+
         Creates an collapsable menu. If the Menu is created directly under a MenuBar, then the widget will
         be placed horizontally below the window title. If the menu Menu is created within another menu, then
         it will be placed vertically alongside MenuItems and display an arrow alongside.
 
         The opened menu will be a vertically listed box below or next to the button.
 
+        ```lua
+            Iris.Window({"Menu Demo"})
+                Iris.MenuBar()
+                    Iris.Menu({"Test Menu"})
+                        Iris.Button({"Menu Option 1"})
+                        Iris.Button({"Menu Option 2"})
+                    Iris.End()
+                Iris.End()
+            Iris.End()
+        ```
+
+        ![Example menu](/Iris/assets/api/menu/basicMenu.gif)
+
         :::info
         There are widgets which are designed for being parented to a menu whilst other happens to work. There is nothing
-        preventing you from adding any widget as a child, but the behaviour is unexplained and not intended, despite allowed.
+        preventing you from adding any widget as a child, but the behaviour is unexplained and not intended.
         :::
-        
+
         ```lua
         hasChildren = true
         hasState = true
@@ -179,13 +192,23 @@ return function(Iris: Types.Iris)
     Iris.Menu = wrapper("Menu")
 
     --[=[
-        @prop MenuItem Iris.MenuItem
         @within Menu
+        @prop MenuItem Iris.MenuItem
         @tag Widget
-        
+
         Creates a button within a menu. The optional KeyCode and ModiferKey arguments will show the keys next
         to the title, but **will not** bind any connection to them. You will need to do this yourself.
-        
+
+        ```lua
+        Iris.Window({"MenuToggle Demo"})
+            Iris.MenuBar()
+                Iris.MenuToggle({"Menu Item"})
+            Iris.End()
+        Iris.End()
+        ```
+
+        ![Example Menu Item](/Iris/assets/api/menu/basicMenuItem.gif)
+
         ```lua
         hasChildren = false
         hasState = false
@@ -203,14 +226,24 @@ return function(Iris: Types.Iris)
     Iris.MenuItem = wrapper("MenuItem")
 
     --[=[
-        @prop MenuToggle Iris.MenuToggle
         @within Menu
+        @prop MenuToggle Iris.MenuToggle
         @tag Widget
         @tag HasState
-        
+
         Creates a togglable button within a menu. The optional KeyCode and ModiferKey arguments act the same
         as the MenuItem. It is not visually the same as a checkbox, but has the same functionality.
-        
+
+        ```lua
+        Iris.Window({"MenuToggle Demo"})
+            Iris.MenuBar()
+                Iris.MenuToggle({"Menu Toggle"})
+            Iris.End()
+        Iris.End()
+        ```
+
+        ![Example Menu Toggle](/Iris/assets/api/menu/basicMenuToggle.gif)
+
         ```lua
         hasChildren = false
         hasState = true
@@ -242,12 +275,22 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop Separator Iris.Separator
         @within Format
+        @prop Separator Iris.Separator
         @tag Widget
 
         A vertical or horizonal line, depending on the context, which visually seperates widgets.
-        
+
+        ```lua
+        Iris.Window({"Separator Demo"})
+            Iris.Text({"Some text here!"})
+            Iris.Separator()
+            Iris.Text({"This text has been separated!"})
+        Iris.End()
+        ```
+
+        ![Example Separator](/Iris/assets/api/format/basicSeparator.png)
+
         ```lua
         hasChildren = false
         hasState = false
@@ -256,13 +299,24 @@ return function(Iris: Types.Iris)
     Iris.Separator = wrapper("Separator")
 
     --[=[
-        @prop Indent Iris.Indent
         @within Format
+        @prop Indent Iris.Indent
         @tag Widget
         @tag HasChildren
-        
+
         Indents its child widgets.
-        
+
+        ```lua
+        Iris.Window({"Indent Demo"})
+            Iris.Text({"Unindented text!"})
+            Iris.Indent()
+                Iris.Text({"This text has been indented!"})
+            Iris.End()
+        Iris.End()
+        ```
+
+        ![Example Indent](/Iris/assets/api/format/basicIndent.png)
+
         ```lua
         hasChildren = true
         hasState = false
@@ -274,32 +328,46 @@ return function(Iris: Types.Iris)
     Iris.Indent = wrapper("Indent")
 
     --[=[
-        @prop Sameline Iris.Sameline
         @within Format
+        @prop SameLine Iris.SameLine
         @tag Widget
         @tag HasChildren
-        
+
         Positions its children in a row, horizontally.
-        
+
+        ```lua
+        Iris.Window({"Same Line Demo"})
+            Iris.Text({"All of these buttons are on the same line!"})
+            Iris.SameLine()
+                Iris.Button({"Button 1"})
+                Iris.Button({"Button 2"})
+                Iris.Button({"Button 3"})
+            Iris.End()
+        Iris.End()
+        ```
+
+        ![Example SameLine](/Iris/assets/api/format/basicSameLine.png)
+
         ```lua
         hasChildren = true
         hasState = false
         Arguments = {
             Width: number? = Iris._config.ItemSpacing.X, -- horizontal spacing between child widgets.
-            VerticalAlignment: Enum.VerticalAlignment? = Enum.VerticalAlignment.Center -- how widgets are aligned to the widget.
+            VerticalAlignment: Enum.VerticalAlignment? = Enum.VerticalAlignment.Center -- how widgets vertically to each other.
+            HorizontalAlignment: Enum.HorizontalAlignment? = Enum.HorizontalAlignment.Center -- how widgets are horizontally.
         }
         ```
     ]=]
     Iris.SameLine = wrapper("SameLine")
 
     --[=[
-        @prop Group Iris.Group
         @within Format
+        @prop Group Iris.Group
         @tag Widget
         @tag HasChildren
-        
+
         Layout widget which contains its children as a single group.
-        
+
         ```lua
         hasChildren = true
         hasState = false
@@ -318,14 +386,21 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop Text Iris.Text
         @within Text
+        @prop Text Iris.Text
         @tag Widget
-        
+
         A text label to display the text argument.
         The Wrapped argument will make the text wrap around if it is cut off by its parent.
         The Color argument will change the color of the text, by default it is defined in the configuration file.
-        The RichText argument will 
+
+        ```lua
+        Iris.Window({"Text Demo"})
+            Iris.Text({"This is regular text"})
+        Iris.End()
+        ```
+
+        ![Example Text](/Iris/assets/api/text/basicText.png)
 
         ```lua
         hasChildren = false
@@ -344,8 +419,8 @@ return function(Iris: Types.Iris)
     Iris.Text = wrapper("Text")
 
     --[=[
-        @prop TextWrapped Iris.Text
         @within Text
+        @prop TextWrapped Iris.Text
         @tag Widget
         @deprecated v2.0.0 -- Use 'Text' with the Wrapped argument or change the config.
 
@@ -362,17 +437,17 @@ return function(Iris: Types.Iris)
         }
         ```
     ]=]
-    Iris.TextWrapped = function(arguments: Types.WidgetArguments): Types.Widget
+    Iris.TextWrapped = function(arguments: Types.WidgetArguments)
         arguments[2] = true
         return Iris.Internal._Insert("Text", arguments)
     end
 
     --[=[
-        @prop TextColored Iris.Text
         @within Text
+        @prop TextColored Iris.Text
         @tag Widget
         @deprecated v2.0.0 -- Use 'Text' with the Color argument or change the config.
-        
+
         An alias for [Iris.Text](Text#Text) with the color set by the Color argument.
 
         ```lua
@@ -387,22 +462,32 @@ return function(Iris: Types.Iris)
         }
         ```
     ]=]
-    Iris.TextColored = function(arguments: Types.WidgetArguments): Types.Widget
+    Iris.TextColored = function(arguments: Types.WidgetArguments)
         arguments[3] = arguments[2]
         arguments[2] = nil
         return Iris.Internal._Insert("Text", arguments)
     end
 
     --[=[
-        @prop SeparatorText Iris.SeparatorText
         @within Text
+        @prop SeparatorText Iris.SeparatorText
         @tag Widget
-        
+
         Similar to [Iris.Separator](Format#Separator) but with a text label to be used as a header
         when an [Iris.Tree](Tree#Tree) or [Iris.CollapsingHeader](Tree#CollapsingHeader) is not appropriate.
 
         Visually a full width thin line with a text label clipping out part of the line.
-        
+
+        ```lua
+        Iris.Window({"Separator Text Demo"})
+            Iris.Text({"Regular Text"})
+            Iris.SeparatorText({"This is a separator with text"})
+            Iris.Text({"More Regular Text"})
+        Iris.End()
+        ```
+
+        ![Example Separator Text](/Iris/assets/api/text/basicSeparatorText.png)
+
         ```lua
         hasChildren = false
         hasState = false
@@ -414,13 +499,24 @@ return function(Iris: Types.Iris)
     Iris.SeparatorText = wrapper("SeparatorText")
 
     --[=[
-        @prop InputText Iris.InputText
         @within Text
+        @prop InputText Iris.InputText
         @tag Widget
         @tag HasState
 
         A field which allows the user to enter text.
-        
+
+        ```lua
+        Iris.Window({"Input Text Demo"})
+            local inputtedText = Iris.State("")
+
+            Iris.InputText({"Enter text here:"}, {text = inputtedText})
+            Iris.Text({"You entered: " .. inputtedText:get()})
+        Iris.End()
+        ```
+
+        ![Example Input Text](/Iris/assets/api/text/basicInputText.gif)
+
         ```lua
         hasChildren = false
         hasState = true
@@ -452,10 +548,10 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop Button Iris.Button
         @within Basic
+        @prop Button Iris.Button
         @tag Widget
-        
+
         A clickable button the size of the text with padding. Can listen to the `clicked()` event to determine if it was pressed.
 
         ```lua
@@ -463,6 +559,7 @@ return function(Iris: Types.Iris)
         hasState = false
         Arguments = {
             Text: string,
+            Size: UDim2? = UDim2.fromOffset(0, 0),
         }
         Events = {
             clicked: () -> boolean,
@@ -476,10 +573,10 @@ return function(Iris: Types.Iris)
     Iris.Button = wrapper("Button")
 
     --[=[
-        @prop SmallButton Iris.SmallButton
         @within Basic
+        @prop SmallButton Iris.SmallButton
         @tag Widget
-        
+
         A smaller clickable button, the same as a [Iris.Button](Basic#Button) but without padding. Can listen to the `clicked()` event to determine if it was pressed.
 
         ```lua
@@ -487,6 +584,7 @@ return function(Iris: Types.Iris)
         hasState = false
         Arguments = {
             Text: string,
+            Size: UDim2? = 0,
         }
         Events = {
             clicked: () -> boolean,
@@ -500,11 +598,11 @@ return function(Iris: Types.Iris)
     Iris.SmallButton = wrapper("SmallButton")
 
     --[=[
-        @prop Checkbox Iris.Checkbox
         @within Basic
+        @prop Checkbox Iris.Checkbox
         @tag Widget
         @tag HasState
-        
+
         A checkable box with a visual tick to represent a boolean true or false state.
 
         ```lua
@@ -526,13 +624,13 @@ return function(Iris: Types.Iris)
     Iris.Checkbox = wrapper("Checkbox")
 
     --[=[
-        @prop RadioButton Iris.RadioButton
         @within Basic
+        @prop RadioButton Iris.RadioButton
         @tag Widget
         @tag HasState
-        
+
         A circular selectable button, changing the state to its index argument. Used in conjunction with multiple other RadioButtons sharing the same state to represent one value from multiple options.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -558,7 +656,6 @@ return function(Iris: Types.Iris)
             [SECTION] Image Widget API
         ----------------------------------
     ]]
-
     --[=[
         @class Image
         Image Widget API
@@ -567,8 +664,8 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop Image Iris.Image
         @within Image
+        @prop Image Iris.Image
         @tag Widget
 
         An image widget for displaying an image given its texture ID and a size. The widget also supports Rect Offset and Size allowing cropping of the image and the rest of the ScaleType properties.
@@ -595,8 +692,8 @@ return function(Iris: Types.Iris)
     Iris.Image = wrapper("Image")
 
     --[=[
-        @prop ImageButton Iris.ImageButton
         @within Image
+        @prop ImageButton Iris.ImageButton
         @tag Widget
 
         An image button widget for a button as an image given its texture ID and a size. The widget also supports Rect Offset and Size allowing cropping of the image, and the rest of the ScaleType properties.
@@ -637,21 +734,22 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop Tree Iris.Tree
         @within Tree
+        @prop Tree Iris.Tree
         @tag Widget
         @tag HasChildren
         @tag HasState
-        
+
         A collapsable container for other widgets, to organise and hide widgets when not needed. The state determines whether the child widgets are visible or not. Clicking on the widget will collapse or uncollapse it.
-        
+
         ```lua
         hasChildren: true
         hasState: true
         Arguments = {
             Text: string,
             SpanAvailWidth: boolean? = false, -- the tree title will fill all horizontal space to the end its parent container.
-            NoIndent: boolean? = false -- the child widgets will not be indented underneath.
+            NoIndent: boolean? = false, -- the child widgets will not be indented underneath.
+            DefaultOpen: boolean? = false -- initially opens the tree if no state is provided
         }
         Events = {
             collapsed: () -> boolean,
@@ -666,19 +764,20 @@ return function(Iris: Types.Iris)
     Iris.Tree = wrapper("Tree")
 
     --[=[
-        @prop CollapsingHeader Iris.CollapsingHeader
         @within Tree
+        @prop CollapsingHeader Iris.CollapsingHeader
         @tag Widget
         @tag HasChildren
         @tag HasState
-        
+
         The same as a Tree Widget, but with a larger title and clearer, used mainly for organsing widgets on the first level of a window.
-        
+
         ```lua
         hasChildren: true
         hasState: true
         Arguments = {
-            Text: string
+            Text: string,
+            DefaultOpen: boolean? = false -- initially opens the tree if no state is provided
         }
         Events = {
             collapsed: () -> boolean,
@@ -691,6 +790,75 @@ return function(Iris: Types.Iris)
         ```
     ]=]
     Iris.CollapsingHeader = wrapper("CollapsingHeader")
+
+    --[[
+        --------------------------------
+            [SECTION] Tab Widget API
+        --------------------------------
+    ]]
+    --[=[
+        @class Tab
+        Tab Widget API
+    ]=]
+
+    --[=[
+        @within Tab
+        @prop TabBar Iris.TabBar
+        @tag Widget
+        @tag HasChildren
+        @tag HasState
+
+        Creates a TabBar for putting tabs under. This does not create the tabs but just the container for them to be in.
+        The index state is used to control the current tab and is based on an index starting from 1 rather than the
+        text provided to a Tab. The TabBar will replicate the index to the Tab children .
+
+        ```lua
+        hasChildren: true
+        hasState: true
+        Arguments = {}
+        Events = {}
+        State = {
+            index: State<number>? -- whether the widget is collapsed.
+        }
+        ```
+    ]=]
+    Iris.TabBar = wrapper("TabBar")
+
+    --[=[
+        @within Tab
+        @prop Tab Iris.Tab
+        @tag Widget
+        @tag HasChildren
+        @tag HasState
+
+        The tab item for use under a TabBar. The TabBar must be the parent and determines the index value. You cannot
+        provide a state for this tab. The optional Hideable argument determines if a tab can be closed, which is
+        controlled by the isOpened state.
+
+        A tab will take up the full horizontal width of the parent and hide any other tabs in the TabBar.
+
+        ```lua
+        hasChildren: true
+        hasState: true
+        Arguments = {
+            Text: string,
+            Hideable: boolean? = nil -- determines whether a tab can be closed/hidden
+        }
+        Events = {
+            clicked: () -> boolean,
+            hovered: () -> boolean
+            selected: () -> boolean
+            unselected: () -> boolean
+            active: () -> boolean
+            opened: () -> boolean
+            closed: () -> boolean
+        }
+        State = {
+            isOpened: State<boolean>?
+        }
+        ```
+    ]=]
+    Iris.Tab = wrapper("Tab")
 
     --[[
         ----------------------------------
@@ -712,7 +880,7 @@ return function(Iris: Types.Iris)
         [Rect](https://create.roblox.com/docs/reference/engine/datatypes/Rect),
         [Color3](https://create.roblox.com/docs/reference/engine/datatypes/Color3)
         and the custom [Color4](https://create.roblox.com/docs/reference/engine/datatypes/Color3).
-        
+
         Each Input widget has the same arguments but the types depend of the DataType:
         1. Text: string? = "Input{type}" -- the text to be displayed to the right of the textbox.
         2. Increment: DataType? = nil, -- the increment argument determines how a value will be rounded once the textbox looses focus.
@@ -735,13 +903,13 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop InputNum Iris.InputNum
         @within Input
+        @prop InputNum Iris.InputNum
         @tag Widget
         @tag HasState
-        
+
         An input box for numbers. The number can be either an integer or a float.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -766,13 +934,13 @@ return function(Iris: Types.Iris)
     Iris.InputNum = wrapper("InputNum")
 
     --[=[
-        @prop InputVector2 Iris.InputVector2
         @within Input
+        @prop InputVector2 Iris.InputVector2
         @tag Widget
         @tag HasState
-        
+
         An input box for Vector2. The numbers can be either integers or floats.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -796,13 +964,13 @@ return function(Iris: Types.Iris)
     Iris.InputVector2 = wrapper("InputVector2")
 
     --[=[
-        @prop InputVector3 Iris.InputVector3
         @within Input
+        @prop InputVector3 Iris.InputVector3
         @tag Widget
         @tag HasState
-        
+
         An input box for Vector3. The numbers can be either integers or floats.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -826,14 +994,14 @@ return function(Iris: Types.Iris)
     Iris.InputVector3 = wrapper("InputVector3")
 
     --[=[
-        @prop InputUDim Iris.InputUDim
         @within Input
+        @prop InputUDim Iris.InputUDim
         @tag Widget
         @tag HasState
-        
+
         An input box for UDim. The Scale box will be a float and the Offset box will be
         an integer, unless specified differently.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -857,14 +1025,14 @@ return function(Iris: Types.Iris)
     Iris.InputUDim = wrapper("InputUDim")
 
     --[=[
-        @prop InputUDim2 Iris.InputUDim2
         @within Input
+        @prop InputUDim2 Iris.InputUDim2
         @tag Widget
         @tag HasState
-        
+
         An input box for UDim2. The Scale boxes will be floats and the Offset boxes will be
         integers, unless specified differently.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -888,13 +1056,13 @@ return function(Iris: Types.Iris)
     Iris.InputUDim2 = wrapper("InputUDim2")
 
     --[=[
-        @prop InputRect Iris.InputRect
         @within Input
+        @prop InputRect Iris.InputRect
         @tag Widget
         @tag HasState
-        
+
         An input box for Rect. The numbers will default to integers, unless specified differently.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -927,20 +1095,20 @@ return function(Iris: Types.Iris)
         Drag Widget API
 
         A draggable widget for each datatype. Allows direct typing input but also dragging values by clicking and holding.
-        
+
         See [Input] for more details on the arguments.
     ]=]
 
     --[=[
-        @prop DragNum Iris.DragNum
         @within Drag
+        @prop DragNum Iris.DragNum
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to click and drag their cursor to enter a number.
         You can ctrl + click to directly input a number, like InputNum.
         You can hold Shift to increase speed, and Alt to decrease speed when dragging.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -964,15 +1132,15 @@ return function(Iris: Types.Iris)
     Iris.DragNum = wrapper("DragNum")
 
     --[=[
-        @prop DragVector2 Iris.DragVector2
         @within Drag
+        @prop DragVector2 Iris.DragVector2
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to click and drag their cursor to enter a Vector2.
         You can ctrl + click to directly input a Vector2, like InputVector2.
         You can hold Shift to increase speed, and Alt to decrease speed when dragging.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -996,15 +1164,15 @@ return function(Iris: Types.Iris)
     Iris.DragVector2 = wrapper("DragVector2")
 
     --[=[
-        @prop DragVector3 Iris.DragVector3
         @within Drag
+        @prop DragVector3 Iris.DragVector3
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to click and drag their cursor to enter a Vector3.
         You can ctrl + click to directly input a Vector3, like InputVector3.
         You can hold Shift to increase speed, and Alt to decrease speed when dragging.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1028,15 +1196,15 @@ return function(Iris: Types.Iris)
     Iris.DragVector3 = wrapper("DragVector3")
 
     --[=[
-        @prop DragUDim Iris.DragUDim
         @within Drag
+        @prop DragUDim Iris.DragUDim
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to click and drag their cursor to enter a UDim.
         You can ctrl + click to directly input a UDim, like InputUDim.
         You can hold Shift to increase speed, and Alt to decrease speed when dragging.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1060,15 +1228,15 @@ return function(Iris: Types.Iris)
     Iris.DragUDim = wrapper("DragUDim")
 
     --[=[
-        @prop DragUDim2 Iris.DragUDim2
         @within Drag
+        @prop DragUDim2 Iris.DragUDim2
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to click and drag their cursor to enter a UDim2.
         You can ctrl + click to directly input a UDim2, like InputUDim2.
         You can hold Shift to increase speed, and Alt to decrease speed when dragging.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1092,15 +1260,15 @@ return function(Iris: Types.Iris)
     Iris.DragUDim2 = wrapper("DragUDim2")
 
     --[=[
-        @prop DragRect Iris.DragRect
         @within Drag
+        @prop DragRect Iris.DragRect
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to click and drag their cursor to enter a Rect.
         You can ctrl + click to directly input a Rect, like InputRect.
         You can hold Shift to increase speed, and Alt to decrease speed when dragging.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1124,15 +1292,15 @@ return function(Iris: Types.Iris)
     Iris.DragRect = wrapper("DragRect")
 
     --[=[
-        @prop InputColor3 Iris.InputColor3
         @within Input
+        @prop InputColor3 Iris.InputColor3
         @tag Widget
         @tag HasState
-        
+
         An input box for Color3. The input boxes are draggable between 0 and 255 or if UseFloats then between 0 and 1.
         Input can also be done using HSV instead of the default RGB.
         If no format argument is provided then a default R, G, B or H, S, V prefix is applied.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1155,17 +1323,17 @@ return function(Iris: Types.Iris)
     Iris.InputColor3 = wrapper("InputColor3")
 
     --[=[
-        @prop InputColor4 Iris.InputColor4
         @within Input
+        @prop InputColor4 Iris.InputColor4
         @tag Widget
         @tag HasState
-        
+
         An input box for Color4. Color4 is a combination of Color3 and a fourth transparency argument.
         It has two states for this purpose.
         The input boxes are draggable between 0 and 255 or if UseFloats then between 0 and 1.
         Input can also be done using HSV instead of the default RGB.
         If no format argument is provided then a default R, G, B, T or H, S, V, T prefix is applied.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1199,19 +1367,19 @@ return function(Iris: Types.Iris)
 
         A draggable widget with a visual bar constrained between a min and max for each datatype.
         Allows direct typing input but also dragging the slider by clicking and holding anywhere in the box.
-        
+
         See [Input] for more details on the arguments.
     ]=]
 
     --[=[
-        @prop SliderNum Iris.SliderNum
         @within Slider
+        @prop SliderNum Iris.SliderNum
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to slide a grip to enter a number within a range.
         You can ctrl + click to directly input a number, like InputNum.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1235,14 +1403,14 @@ return function(Iris: Types.Iris)
     Iris.SliderNum = wrapper("SliderNum")
 
     --[=[
-        @prop SliderVector2 Iris.SliderVector2
         @within Slider
+        @prop SliderVector2 Iris.SliderVector2
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to slide a grip to enter a Vector2 within a range.
         You can ctrl + click to directly input a Vector2, like InputVector2.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1266,14 +1434,14 @@ return function(Iris: Types.Iris)
     Iris.SliderVector2 = wrapper("SliderVector2")
 
     --[=[
-        @prop SliderVector3 Iris.SliderVector3
         @within Slider
+        @prop SliderVector3 Iris.SliderVector3
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to slide a grip to enter a Vector3 within a range.
         You can ctrl + click to directly input a Vector3, like InputVector3.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1297,14 +1465,14 @@ return function(Iris: Types.Iris)
     Iris.SliderVector3 = wrapper("SliderVector3")
 
     --[=[
-        @prop SliderUDim Iris.SliderUDim
         @within Slider
+        @prop SliderUDim Iris.SliderUDim
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to slide a grip to enter a UDim within a range.
         You can ctrl + click to directly input a UDim, like InputUDim.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1328,14 +1496,14 @@ return function(Iris: Types.Iris)
     Iris.SliderUDim = wrapper("SliderUDim")
 
     --[=[
-        @prop SliderUDim2 Iris.SliderUDim2
         @within Slider
+        @prop SliderUDim2 Iris.SliderUDim2
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to slide a grip to enter a UDim2 within a range.
         You can ctrl + click to directly input a UDim2, like InputUDim2.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1359,14 +1527,14 @@ return function(Iris: Types.Iris)
     Iris.SliderUDim2 = wrapper("SliderUDim2")
 
     --[=[
-        @prop SliderRect Iris.SliderRect
         @within Slider
+        @prop SliderRect Iris.SliderRect
         @tag Widget
         @tag HasState
-        
+
         A field which allows the user to slide a grip to enter a Rect within a range.
         You can ctrl + click to directly input a Rect, like InputRect.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1389,38 +1557,6 @@ return function(Iris: Types.Iris)
     ]=]
     Iris.SliderRect = wrapper("SliderRect")
 
-    --[=[
-        @private
-        @prop SliderNum Iris.SliderNum
-        @within Slider
-        @tag Widget
-        @tag HasState
-        
-        A field which allows the user to slide a grip to enter a number within a range.
-        You can ctrl + click to directly input a number, like InputNum.
-        
-        ```lua
-        hasChildren = false
-        hasState = true
-        Arguments = {
-            Text: string? = "SliderNum",
-            Increment: number? = 1,
-            Min: number? = 0,
-            Max: number? = 100,
-            Format: string? | { string }? = [DYNAMIC] -- Iris will dynamically generate an approriate format.
-        }
-        Events = {
-            numberChanged: () -> boolean,
-            hovered: () -> boolean
-        }
-        States = {
-            number: State<number>?,
-            editingText: State<boolean>?
-        }
-        ```
-    ]=]
-    -- Iris.SliderEnum = wrapper("SliderEnum")
-
     --[[
         ----------------------------------
             [SECTION] Combo Widget API
@@ -1432,13 +1568,13 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop Selectable Iris.Selectable
         @within Combo
+        @prop Selectable Iris.Selectable
         @tag Widget
         @tag HasState
-        
+
         An object which can be selected.
-        
+
         ```lua
         hasChildren = false
         hasState = true
@@ -1465,14 +1601,14 @@ return function(Iris: Types.Iris)
     Iris.Selectable = wrapper("Selectable")
 
     --[=[
-        @prop Combo Iris.Combo
         @within Combo
+        @prop Combo Iris.Combo
         @tag Widget
         @tag HasChildren
         @tag HasState
-        
-        A selection box to choose a value from a range of values.
-        
+
+        A dropdown menu box to make a selection from a list of values.
+
         ```lua
         hasChildren = true
         hasState = true
@@ -1484,6 +1620,7 @@ return function(Iris: Types.Iris)
         Events = {
             opened: () -> boolean,
             closed: () -> boolean,
+            changed: () -> boolean,
             clicked: () -> boolean,
             hovered: () -> boolean
         }
@@ -1496,14 +1633,14 @@ return function(Iris: Types.Iris)
     Iris.Combo = wrapper("Combo")
 
     --[=[
-        @prop ComboArray Iris.Combo
         @within Combo
+        @prop ComboArray Iris.Combo
         @tag Widget
         @tag HasChildren
         @tag HasState
-        
+
         A selection box to choose a value from an array.
-        
+
         ```lua
         hasChildren = true
         hasState = true
@@ -1527,7 +1664,7 @@ return function(Iris: Types.Iris)
         }
         ```
     ]=]
-    Iris.ComboArray = function(arguments: Types.WidgetArguments, states: Types.WidgetStates?, selectionArray: { any })
+    Iris.ComboArray = function<T>(arguments: Types.WidgetArguments, states: Types.WidgetStates?, selectionArray: { T })
         local defaultState
         if states == nil then
             defaultState = Iris.State(selectionArray[1])
@@ -1535,9 +1672,9 @@ return function(Iris: Types.Iris)
             defaultState = states
         end
         local thisWidget = Iris.Internal._Insert("Combo", arguments, defaultState)
-        local sharedIndex: Types.State = thisWidget.state.index
+        local sharedIndex = thisWidget.state.index
         for _, Selection in selectionArray do
-            Iris.Internal._Insert("Selectable", { Selection, Selection }, { index = sharedIndex } :: Types.States)
+            Iris.Internal._Insert("Selectable", { Selection, Selection }, { index = sharedIndex })
         end
         Iris.End()
 
@@ -1545,14 +1682,14 @@ return function(Iris: Types.Iris)
     end
 
     --[=[
-        @prop ComboEnum Iris.Combo
         @within Combo
+        @prop ComboEnum Iris.Combo
         @tag Widget
         @tag HasChildren
         @tag HasState
-        
+
         A selection box to choose a value from an Enum.
-        
+
         ```lua
         hasChildren = true
         hasState = true
@@ -1579,19 +1716,51 @@ return function(Iris: Types.Iris)
     Iris.ComboEnum = function(arguments: Types.WidgetArguments, states: Types.WidgetStates?, enumType: Enum)
         local defaultState
         if states == nil then
-            defaultState = Iris.State(enumType[1])
+            defaultState = Iris.State(enumType:GetEnumItems()[1])
         else
             defaultState = states
         end
         local thisWidget = Iris.Internal._Insert("Combo", arguments, defaultState)
         local sharedIndex = thisWidget.state.index
         for _, Selection in enumType:GetEnumItems() do
-            Iris.Internal._Insert("Selectable", { Selection.Name, Selection }, { index = sharedIndex } :: Types.States)
+            Iris.Internal._Insert("Selectable", { Selection.Name, Selection }, { index = sharedIndex })
         end
         Iris.End()
 
         return thisWidget
     end
+
+    --[=[
+        @private
+        @within Slider
+        @prop InputEnum Iris.InputEnum
+        @tag Widget
+        @tag HasState
+
+        A field which allows the user to slide a grip to enter a number within a range.
+        You can ctrl + click to directly input a number, like InputNum.
+
+        ```lua
+        hasChildren = false
+        hasState = true
+        Arguments = {
+            Text: string? = "InputEnum",
+            Increment: number? = 1,
+            Min: number? = 0,
+            Max: number? = 100,
+            Format: string? | { string }? = [DYNAMIC] -- Iris will dynamically generate an approriate format.
+        }
+        Events = {
+            numberChanged: () -> boolean,
+            hovered: () -> boolean
+        }
+        States = {
+            number: State<number>?,
+            editingText: State<boolean>?,
+            enumItem: EnumItem
+        }
+        ```
+    ]=]
     Iris.InputEnum = Iris.ComboEnum
 
     --[[
@@ -1605,8 +1774,8 @@ return function(Iris: Types.Iris)
     ]=]
 
     --[=[
-        @prop ProgressBar Iris.PrograssBar
         @within Plot
+        @prop ProgressBar Iris.ProgressBar
         @tag Widget
         @tag HasState
 
@@ -1630,6 +1799,69 @@ return function(Iris: Types.Iris)
     ]=]
     Iris.ProgressBar = wrapper("ProgressBar")
 
+    --[=[
+        @within Plot
+        @prop PlotLines Iris.PlotLines
+        @tag Widget
+        @tag HasState
+
+        A line graph for plotting a single line. Includes hovering to see a specific value on the graph,
+        and automatic scaling. Has an overlay text option at the top of the plot for displaying any
+        information.
+
+        ```lua
+        hasChildren = false
+        hasState = true
+        Arguments = {
+            Text: string? = "Plot Lines",
+            Height: number? = 0,
+            Min: number? = min, -- Iris will use the minimum value from the values
+            Max: number? = max, -- Iris will use the maximum value from the values
+            TextOverlay: string? = ""
+        }
+        Events = {
+            hovered: () -> boolean
+        }
+        States = {
+            values: State<{number}>?,
+            hovered: State<{number}>? -- read-only property
+        }
+        ```
+    ]=]
+    Iris.PlotLines = wrapper("PlotLines")
+
+    --[=[
+        @within Plot
+        @prop PlotHistogram Iris.PlotHistogram
+        @tag Widget
+        @tag HasState
+
+        A hisogram graph for showing values. Includes hovering to see a specific block on the graph,
+        and automatic scaling. Has an overlay text option at the top of the plot for displaying any
+        information. Also supports a baseline option, which determines where the blocks start from.
+
+        ```lua
+        hasChildren = false
+        hasState = true
+        Arguments = {
+            Text: string? = "Plot Histogram",
+            Height: number? = 0,
+            Min: number? = min, -- Iris will use the minimum value from the values
+            Max: number? = max, -- Iris will use the maximum value from the values
+            TextOverlay: string? = "",
+            BaseLine: number? = 0 -- by default, blocks swap side at 0
+        }
+        Events = {
+            hovered: () -> boolean
+        }
+        States = {
+            values: State<{number}>?,
+            hovered: State<{number}>? -- read-only property
+        }
+        ```
+    ]=]
+    Iris.PlotHistogram = wrapper("PlotHistogram")
+
     --[[
         ----------------------------------
             [SECTION] Table Widget API
@@ -1638,68 +1870,218 @@ return function(Iris: Types.Iris)
     --[=[
         @class Table
         Table Widget API
+
+        Example usage for creating a simple table:
+        ```lua
+        Iris.Table({ 4, true })
+        do
+            Iris.SetHeaderColumnIndex(1)
+
+            -- for each row
+            for i = 0, 10 do
+
+                -- for each column
+                for j = 1, 4 do
+                    if i == 0 then
+                        --
+                        Iris.Text({ `H: {j}` })
+                    else
+                        Iris.Text({ `R: {i}, C: {j}` })
+                    end
+
+                    -- move the next column (and row when necessary)
+                    Iris.NextColumn()
+                end
+            end
+        ```
     ]=]
 
     --[=[
-        @prop Table Iris.Table
         @within Table
+        @prop Table Iris.Table
         @tag Widget
         @tag HasChildren
-        
-        A layout widget which allows children to be displayed in configurable columns and rows.
-        
+
+        A layout widget which allows children to be displayed in configurable columns and rows. Highly configurable for many different
+        options, with options for custom width columns as configured by the user, or automatically use the best size.
+
+        When Resizable is enabled, the vertical columns can be dragged horizontally to increase or decrease space. This is linked to
+        the widths state, which controls the width of each column. This is also dependent on whether the FixedWidth argument is enabled.
+        By default, the columns will scale with the width of the table overall, therefore taking up a percentage, and the widths will be
+        in the range of 0 to 1 as a float. If FixedWidth is enabled, then the widths will be in pixels and have a value of > 2 as an
+        integer.
+
+        ProportionalWidth determines whether each column has the same width, or individual. By default, each column will take up an equal
+        proportion of the total table width. If true, then the columns will be allocated a width proportional to their total content size,
+        meaning wider columns take up a greater share of the total available space. For a fixed width table, by default each column will
+        take the max width of all the columns. When true, each column width will the minimum to fit the children within.
+
+        LimitTableWidth is used when FixedWidth is true. It will cut off the table horizontally after the last column.
+
+        :::info
+        Once the NumColumns is set, it is not possible to change it without some extra code. The best way to do this is by using
+        `Iris.PushConfig()` and `Iris.PopConfig()` which will automatically redraw the widget when the columns change.
+
+        ```lua
+        local numColumns = 4
+        Iris.PushConfig({ columns = numColumns })
+        Iris.Table({ numColumns, ...})
+        do
+            ...
+        end
+        Iris.End()
+        Iris.PopConfig()
+        ```
+
+        :::danger Error: nil
+        Always ensure that the number of elements in the widths state is greater or equal to the
+        new number of columns when changing the number of columns.
+        :::
+        :::
+
         ```lua
         hasChildren = true
         hasState = false
         Arguments = {
-            NumColumns = number,
-            RowBg = boolean? = false, -- whether the row backgrounds alternate a background fill.
-            BordersOuter = boolean? = false,
-            BordersInner = boolean? = false, -- borders on each cell.
+            NumColumns: number, -- number of columns in the table, cannot be changed
+            Header: boolean? = false, -- display a header row for each column
+            RowBackground: boolean? = false, -- alternating row background colours
+            OuterBorders: boolean? = false, -- outer border on the entire table
+            InnerBorders: boolean? = false, -- inner bordres on the entire table
+            Resizable: boolean? = false, -- the columns can be resized by dragging or state
+            FixedWidth: boolean? = false, -- columns takes up a fixed pixel width, rather than a proportion of the total available
+            ProportionalWidth: boolean? = false, -- minimises the width of each column individually
+            LimitTableWidth: boolean? = false, -- when a fixed width, cut of any unused space
         }
         Events = {
             hovered: () -> boolean
+        }
+        States = {
+            widths: State<{ number }>? -- the widths of each column if Resizable
         }
         ```
     ]=]
     Iris.Table = wrapper("Table")
 
     --[=[
-        @function NextColumn
         @within Table
-        
-        In a table, moves to the next available cell. if the current cell is in the last column,
-        then the next cell will be the first column of the next row.
+        @function NextColumn
+
+        In a table, moves to the next available cell. If the current cell is in the last column,
+        then moves to the cell in the first column of the next row.
     ]=]
     Iris.NextColumn = function()
-        Iris.Internal._GetParentWidget().RowColumnIndex += 1
+        local Table = Iris.Internal._GetParentWidget() :: Types.Table
+        assert(Table ~= nil, "Iris.NextColumn() can only called when directly within a table.")
+
+        local columnIndex = Table._columnIndex
+        if columnIndex == Table.arguments.NumColumns then
+            Table._columnIndex = 1
+            Table._rowIndex += 1
+        else
+            Table._columnIndex += 1
+        end
+        return Table._columnIndex
     end
 
     --[=[
-        @function SetColumnIndex
         @within Table
-        @param index number
-        
-        In a table, directly sets the index of the column.
-    ]=]
-    Iris.SetColumnIndex = function(columnIndex: number)
-        local ParentWidget: Types.Widget = Iris.Internal._GetParentWidget()
-        assert(columnIndex >= ParentWidget.InitialNumColumns, "Iris.SetColumnIndex Argument must be in column range")
-        ParentWidget.RowColumnIndex = math.floor(ParentWidget.RowColumnIndex / ParentWidget.InitialNumColumns) + (columnIndex - 1)
-    end
-
-    --[=[
         @function NextRow
-        @within Table
-        
-        In a table, moves to the next available row,
-        skipping cells in the previous column if the last cell wasn't in the last column
+
+        In a table, moves to the cell in the first column of the next row.
     ]=]
     Iris.NextRow = function()
-        -- sets column Index back to 0, increments Row
-        local ParentWidget: Types.Widget = Iris.Internal._GetParentWidget()
-        local InitialNumColumns: number = ParentWidget.InitialNumColumns
-        local nextRow: number = math.floor((ParentWidget.RowColumnIndex + 1) / InitialNumColumns) * InitialNumColumns
-        ParentWidget.RowColumnIndex = nextRow
+        local Table = Iris.Internal._GetParentWidget() :: Types.Table
+        assert(Table ~= nil, "Iris.NextRow() can only called when directly within a table.")
+        Table._columnIndex = 1
+        Table._rowIndex += 1
+        return Table._rowIndex
+    end
+
+    --[=[
+        @within Table
+        @function SetColumnIndex
+        @param index number
+
+        In a table, moves to the cell in the given column in the same previous row.
+
+        Will erorr if the given index is not in the range of 1 to NumColumns.
+    ]=]
+    Iris.SetColumnIndex = function(index: number)
+        local Table = Iris.Internal._GetParentWidget() :: Types.Table
+        assert(Table ~= nil, "Iris.SetColumnIndex() can only called when directly within a table.")
+        assert((index >= 1) and (index <= Table.arguments.NumColumns), `The index must be between 1 and {Table.arguments.NumColumns}, inclusive.`)
+        Table._columnIndex = index
+    end
+
+    --[=[
+        @within Table
+        @function SetRowIndex
+        @param index number
+
+        In a table, moves to the cell in the given row with the same previous column.
+    ]=]
+    Iris.SetRowIndex = function(index: number)
+        local Table = Iris.Internal._GetParentWidget() :: Types.Table
+        assert(Table ~= nil, "Iris.SetRowIndex() can only called when directly within a table.")
+        assert(index >= 1, "The index must be greater or equal to 1.")
+        Table._rowIndex = index
+    end
+
+    --[=[
+        @within Table
+        @function NextHeaderColumn
+
+        In a table, moves to the cell in the next column in the header row (row index 0). Will loop around
+        from the last column to the first.
+    ]=]
+    Iris.NextHeaderColumn = function()
+        local Table = Iris.Internal._GetParentWidget() :: Types.Table
+        assert(Table ~= nil, "Iris.NextHeaderColumn() can only called when directly within a table.")
+
+        Table._rowIndex = 0
+        Table._columnIndex = (Table._columnIndex % Table.arguments.NumColumns) + 1
+
+        return Table._columnIndex
+    end
+
+    --[=[
+        @within Table
+        @function SetHeaderColumnIndex
+        @param index number
+
+        In a table, moves to the cell in the given column in the header row (row index 0).
+
+        Will erorr if the given index is not in the range of 1 to NumColumns.
+    ]=]
+    Iris.SetHeaderColumnIndex = function(index: number)
+        local Table = Iris.Internal._GetParentWidget() :: Types.Table
+        assert(Table ~= nil, "Iris.SetHeaderColumnIndex() can only called when directly within a table.")
+        assert((index >= 1) and (index <= Table.arguments.NumColumns), `The index must be between 1 and {Table.arguments.NumColumns}, inclusive.`)
+
+        Table._rowIndex = 0
+        Table._columnIndex = index
+    end
+
+    --[=[
+        @within Table
+        @function SetColumnWidth
+        @param index number
+        @param width number
+
+        In a table, sets the width of the given column to the given value by changing the
+        Table's widths state. When the FixedWidth argument is true, the width should be in
+        pixels >2, otherwise as a float between 0 and 1.
+
+        Will erorr if the given index is not in the range of 1 to NumColumns.
+    ]=]
+    Iris.SetColumnWidth = function(index: number, width: number)
+        local Table = Iris.Internal._GetParentWidget() :: Types.Table
+        assert(Table ~= nil, "Iris.SetColumnWidth() can only called when directly within a table.")
+        assert((index >= 1) and (index <= Table.arguments.NumColumns), `The index must be between 1 and {Table.arguments.NumColumns}, inclusive.`)
+
+        local oldValue = Table.state.widths.value[index]
+        Table.state.widths.value[index] = width
+        Table.state.widths:set(Table.state.widths.value, width ~= oldValue)
     end
 end
